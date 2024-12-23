@@ -1,0 +1,180 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tetris</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #000;
+    }
+    canvas {
+      border: 1px solid #fff;
+      background-color: #111;
+    }
+  </style>
+</head>
+<body>
+    <button class="noning"><a href="../index.html">Exit</a></button>
+  <canvas id="tetrisCanvas" width="200" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('tetrisCanvas');
+    const ctx = canvas.getContext('2d');
+    const grid = 20;
+    const rows = canvas.height / grid;
+    const cols = canvas.width / grid;
+
+    const shapes = [
+      [[1, 1, 1, 1]], // I
+      [[1, 1], [1, 1]], // O
+      [[1, 1, 1], [0, 1, 0]], // T
+      [[1, 1, 0], [0, 1, 1]], // S
+      [[0, 1, 1], [1, 1, 0]], // Z
+      [[1, 1, 1], [1, 0, 0]], // L
+      [[1, 1, 1], [0, 0, 1]], // J
+    ];
+
+    const colors = [
+      'cyan', 'yellow', 'purple', 'green', 'red', 'orange', 'blue'
+    ];
+
+    let board = Array.from({ length: rows }, () => Array(cols).fill(0));
+
+    let currentPiece = {
+      shape: null,
+      color: '',
+      x: 0,
+      y: 0
+    };
+
+    function drawSquare(x, y, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x * grid, y * grid, grid, grid);
+      ctx.strokeStyle = '#111';
+      ctx.strokeRect(x * grid, y * grid, grid, grid);
+    }
+
+    function drawBoard() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          if (board[y][x]) {
+            drawSquare(x, y, board[y][x]);
+          }
+        }
+      }
+    }
+
+    function drawPiece() {
+      currentPiece.shape.forEach((row, dy) => {
+        row.forEach((value, dx) => {
+          if (value) {
+            drawSquare(currentPiece.x + dx, currentPiece.y + dy, currentPiece.color);
+          }
+        });
+      });
+    }
+
+    function generatePiece() {
+      const index = Math.floor(Math.random() * shapes.length);
+      currentPiece.shape = shapes[index];
+      currentPiece.color = colors[index];
+      currentPiece.x = Math.floor(cols / 2 - currentPiece.shape[0].length / 2);
+      currentPiece.y = 0;
+    }
+
+    function movePiece(dx, dy) {
+      currentPiece.x += dx;
+      currentPiece.y += dy;
+      if (checkCollision()) {
+        currentPiece.x -= dx;
+        currentPiece.y -= dy;
+        return false;
+      }
+      return true;
+    }
+
+    function rotatePiece() {
+      const shape = currentPiece.shape;
+      const newShape = shape[0].map((_, i) => shape.map(row => row[i]).reverse());
+      const prevShape = currentPiece.shape;
+      currentPiece.shape = newShape;
+      if (checkCollision()) {
+        currentPiece.shape = prevShape;
+      }
+    }
+
+    function checkCollision() {
+      return currentPiece.shape.some((row, dy) => {
+        return row.some((value, dx) => {
+          const x = currentPiece.x + dx;
+          const y = currentPiece.y + dy;
+          return (
+            value && (
+              x < 0 || x >= cols || y >= rows || board[y] && board[y][x])
+          );
+        });
+      });
+    }
+
+    function placePiece() {
+      currentPiece.shape.forEach((row, dy) => {
+        row.forEach((value, dx) => {
+          if (value) {
+            board[currentPiece.y + dy][currentPiece.x + dx] = currentPiece.color;
+          }
+        });
+      });
+      clearLines();
+      generatePiece();
+      if (checkCollision()) {
+        board = Array.from({ length: rows }, () => Array(cols).fill(0));
+      }
+    }
+
+    function clearLines() {
+      board = board.filter(row => row.some(value => !value));
+      while (board.length < rows) {
+        board.unshift(Array(cols).fill(0));
+      }
+    }
+
+    function dropPiece() {
+      if (!movePiece(0, 1)) {
+        placePiece();
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case 'ArrowLeft':
+          movePiece(-1, 0);
+          break;
+        case 'ArrowRight':
+          movePiece(1, 0);
+          break;
+        case 'ArrowDown':
+          dropPiece();
+          break;
+        case 'ArrowUp':
+          rotatePiece();
+          break;
+      }
+      drawBoard();
+      drawPiece();
+    });
+
+    generatePiece();
+    setInterval(() => {
+      dropPiece();
+      drawBoard();
+      drawPiece();
+    }, 500);
+  </script>
+</body>
+</html>

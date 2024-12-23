@@ -1,0 +1,131 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classic Ping Pong</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #000;
+    }
+    canvas {
+      border: 1px solid #fff;
+      background-color: #111;
+    }
+  </style>
+</head>
+<body>
+    <button class="noning"><a href="../index.html">Exit</a></button>
+
+  <canvas id="pongCanvas" width="800" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('pongCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const paddleWidth = 10;
+    const paddleHeight = 80;
+    const ballSize = 10;
+
+    let leftPaddleY = canvas.height / 2 - paddleHeight / 2;
+    let rightPaddleY = canvas.height / 2 - paddleHeight / 2;
+    let ballX = canvas.width / 2;
+    let ballY = canvas.height / 2;
+    let ballSpeedX = 4;
+    let ballSpeedY = 2;
+
+    const paddleSpeed = 5;
+
+    function drawRect(x, y, width, height, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, width, height);
+    }
+
+    function drawCircle(x, y, radius, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawNet() {
+      for (let i = 0; i < canvas.height; i += 20) {
+        drawRect(canvas.width / 2 - 1, i, 2, 10, 'white');
+      }
+    }
+
+    function drawGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawNet();
+      drawRect(0, leftPaddleY, paddleWidth, paddleHeight, 'white');
+      drawRect(canvas.width - paddleWidth, rightPaddleY, paddleWidth, paddleHeight, 'white');
+      drawCircle(ballX, ballY, ballSize, 'white');
+    }
+
+    function moveBall() {
+      ballX += ballSpeedX;
+      ballY += ballSpeedY;
+
+      if (ballY <= 0 || ballY >= canvas.height) {
+        ballSpeedY *= -1;
+      }
+
+      if (
+        ballX <= paddleWidth &&
+        ballY >= leftPaddleY &&
+        ballY <= leftPaddleY + paddleHeight
+      ) {
+        ballSpeedX *= -1;
+      }
+
+      if (
+        ballX >= canvas.width - paddleWidth &&
+        ballY >= rightPaddleY &&
+        ballY <= rightPaddleY + paddleHeight
+      ) {
+        ballSpeedX *= -1;
+      }
+
+      if (ballX < 0 || ballX > canvas.width) {
+        resetBall();
+      }
+    }
+
+    function resetBall() {
+      ballX = canvas.width / 2;
+      ballY = canvas.height / 2;
+      ballSpeedX = ballSpeedX > 0 ? -4 : 4;
+      ballSpeedY = 2;
+    }
+
+    function updateGame() {
+      moveBall();
+      drawGame();
+    }
+
+    window.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case 'w':
+          leftPaddleY = Math.max(0, leftPaddleY - paddleSpeed);
+          break;
+        case 's':
+          leftPaddleY = Math.min(canvas.height - paddleHeight, leftPaddleY + paddleSpeed);
+          break;
+        case 'ArrowUp':
+          rightPaddleY = Math.max(0, rightPaddleY - paddleSpeed);
+          break;
+        case 'ArrowDown':
+          rightPaddleY = Math.min(canvas.height - paddleHeight, rightPaddleY + paddleSpeed);
+          break;
+      }
+    });
+
+    setInterval(updateGame, 1000 / 60);
+  </script>
+</body>
+</html>

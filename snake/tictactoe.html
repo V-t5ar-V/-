@@ -1,0 +1,134 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Крестики-нолики</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 5px;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      background-color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: bold;
+      cursor: pointer;
+      border: 2px solid #000;
+    }
+    .cell.taken {
+      pointer-events: none;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+    <button class="noning"><a href="../index.html">Exit</a></button>
+
+  <h1>Крестики-нолики</h1>
+  <div class="board" id="board"></div>
+  <button id="restartButton" style="display: none;">Играть снова</button>
+
+  <script>
+    const board = document.getElementById("board");
+    const restartButton = document.getElementById("restartButton");
+
+    let currentPlayer = "X";
+    let gameActive = true;
+    let boardState = Array(9).fill(null);
+
+    const winningCombinations = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+      [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+      [0, 4, 8], [2, 4, 6]             // Diagonals
+    ];
+
+    function checkWinner() {
+      for (const combination of winningCombinations) {
+        const [a, b, c] = combination;
+        if (boardState[a] && boardState[a] === boardState[b] && boardState[a] === boardState[c]) {
+          gameActive = false;
+          highlightWinningCells(combination);
+          setTimeout(() => alert(`Игрок ${boardState[a]} выиграл!`), 100);
+          restartButton.style.display = "block";
+          return true;
+        }
+      }
+
+      if (!boardState.includes(null)) {
+        gameActive = false;
+        setTimeout(() => alert("Ничья!"), 100);
+        restartButton.style.display = "block";
+        return true;
+      }
+
+      return false;
+    }
+
+    function highlightWinningCells(cells) {
+      cells.forEach(index => {
+        document.getElementById(`cell-${index}`).style.backgroundColor = "#90ee90";
+      });
+    }
+
+    function handleCellClick(e) {
+      const cell = e.target;
+      const index = parseInt(cell.dataset.index);
+
+      if (!gameActive || boardState[index]) return;
+
+      boardState[index] = currentPlayer;
+      cell.textContent = currentPlayer;
+      cell.classList.add("taken");
+
+      if (!checkWinner()) {
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+      }
+    }
+
+    function initializeBoard() {
+      board.innerHTML = "";
+      boardState = Array(9).fill(null);
+      gameActive = true;
+      currentPlayer = "X";
+      restartButton.style.display = "none";
+
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.id = `cell-${i}`;
+        cell.dataset.index = i;
+        cell.addEventListener("click", handleCellClick);
+        board.appendChild(cell);
+      }
+    }
+
+    restartButton.addEventListener("click", initializeBoard);
+
+    initializeBoard();
+  </script>
+</body>
+</html>
